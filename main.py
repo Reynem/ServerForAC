@@ -9,7 +9,7 @@ from hashpass import hash_password, verify_password
 from PIL import Image
 import io
 from models import User
-from security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user
+from security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
 
 
 class UserCreate(BaseModel):
