@@ -64,3 +64,10 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+def decode_access_token(token: str) -> dict:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")

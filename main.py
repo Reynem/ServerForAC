@@ -9,7 +9,8 @@ from hashpass import hash_password, verify_password
 from PIL import Image
 import io
 from models import User
-from security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
+from security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token
+from fastapi import Header
 
 
 class UserCreate(BaseModel):
@@ -21,6 +22,9 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
+
+class UserUpdateName(BaseModel):
+    new_name: str
 
 
 app = FastAPI()
@@ -70,6 +74,33 @@ async def predict(file: UploadFile = File(...)):
 
     verdict = "Больше белого" if white_pixels > black_pixels else "Больше черного"
     return {"message": verdict}
+
+
+@app.put("/update_name")
+async def update_name(
+    update_data: UserUpdateName,
+    db: AsyncSession = Depends(get_db),
+    authorization: str = Header(None),
+):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+
+    token = authorization.split(" ")[1]
+    payload = decode_access_token(token)
+    user_id = int(payload.get("sub"))
+
+    result = await db.execute(select(User).filter(User.id == user_id))
+    db_user = result.scalars().first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db_user.name = update_data.new_name
+    await db.commit()
+    await db.refresh(db_user)
+
+    return {"message": "Name updated successfully", "new_name": db_user.name}
+
 
 if __name__ == "__main__":
     import uvicorn
