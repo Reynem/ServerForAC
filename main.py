@@ -11,6 +11,7 @@ import io
 from models import User
 from security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token
 from fastapi import Header
+from security import get_current_user
 
 
 class UserCreate(BaseModel):
@@ -22,6 +23,7 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
+
 
 class UserUpdateName(BaseModel):
     new_name: str
@@ -74,6 +76,11 @@ async def predict(file: UploadFile = File(...)):
 
     verdict = "Больше белого" if white_pixels > black_pixels else "Больше черного"
     return {"message": verdict}
+
+
+@app.get("/get_user")
+async def get_user(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    return {"name": user.name, "email": user.email}
 
 
 @app.put("/update_name")
