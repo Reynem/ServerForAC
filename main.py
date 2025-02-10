@@ -1,18 +1,15 @@
 from datetime import timedelta
 from dependencies import get_db
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-import numpy as np
 from hashpass import hash_password, verify_password
-from PIL import Image
-import io
 from models import User
 from security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token
 from fastapi import Header
 from security import get_current_user
-
+import model
 
 class UserCreate(BaseModel):
     name: str
@@ -64,20 +61,6 @@ async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
 
     return {"access_token": access_token, "token_type": "bearer", "user_id": db_user.id}
 
-
-@app.post("predict/")
-async def predict(file: UploadFile = File(...)):
-    contents = await file.read()
-    image = Image.open(io.BytesIO(contents)).convert("L")
-    image_array = np.array(image)
-    # Далее идет то, что надо будет изменить после создания модели
-    white_pixels = np.sum(image_array > 128)
-    black_pixels = np.sum(image_array <= 128)
-
-    verdict = "Больше белого" if white_pixels > black_pixels else "Больше черного"
-    return {"message": verdict}
-
-
 @app.get("/get_user")
 async def get_user(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     return {"name": user.name, "email": user.email}
@@ -108,6 +91,7 @@ async def update_name(
 
     return {"message": "Name updated successfully", "new_name": db_user.name}
 
+app.include_router(model.router)
 
 if __name__ == "__main__":
     import uvicorn
