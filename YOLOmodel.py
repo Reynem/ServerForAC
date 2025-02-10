@@ -9,6 +9,7 @@ from ultralytics import YOLO
 router = APIRouter()
 model = YOLO("runs/detect/train7/weights/best.pt")
 
+
 @router.post("detect/")
 async def detection(file: UploadFile = File(...)):
     contents = await file.read()

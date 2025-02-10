@@ -9,7 +9,7 @@ from models import User
 from security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token
 from fastapi import Header
 from security import get_current_user
-import model
+import YOLOmodel
 
 
 class UserCreate(BaseModel):
@@ -62,6 +62,7 @@ async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
 
     return {"access_token": access_token, "token_type": "bearer", "user_id": db_user.id}
 
+
 @app.get("/get_user")
 async def get_user(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     return {"name": user.name, "email": user.email}
@@ -92,7 +93,7 @@ async def update_name(
 
     return {"message": "Name updated successfully", "new_name": db_user.name}
 
-app.include_router(model.router)
+app.include_router(YOLOmodel.router)
 
 if __name__ == "__main__":
     import uvicorn
