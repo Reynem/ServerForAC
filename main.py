@@ -11,6 +11,7 @@ from fastapi import Header
 from security import get_current_user
 import model
 
+
 class UserCreate(BaseModel):
     name: str
     email: str
