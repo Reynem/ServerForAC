@@ -9,8 +9,9 @@ from ultralytics import YOLO
 router = APIRouter()
 model = YOLO("runs/detect/train7/weights/best.pt")
 
+class_names = model.names
 
-@router.post("detect/")
+@router.post("/detect")
 async def detection(file: UploadFile = File(...)):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents)).convert("RGB")
@@ -24,6 +25,7 @@ async def detection(file: UploadFile = File(...)):
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             conf = float(box.conf[0])
             cls = int(box.cls[0])
+            class_name = class_names[cls]
             detections.append({
                 "x1": x1,
                 "y1": y1,
@@ -31,6 +33,6 @@ async def detection(file: UploadFile = File(...)):
                 "y2": y2,
                 "confidence": conf,
                 "class_id": cls,
-
+                "class_name": class_name,
             })
     return JSONResponse(content={"detections": detections})
